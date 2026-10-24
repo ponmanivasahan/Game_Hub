@@ -4,7 +4,8 @@
   "description": "Backend API for IndieGamer Hub platform",
   "main": "src/server.js",
   "scripts": {
-    "build": "node -e \"const fs = require('fs'), cp = require('child_process'); if (fs.existsSync('../frontend')) { cp.execSync('npm --prefix ../frontend install && npm --prefix ../frontend run build', { stdio: 'inherit' }); }\"",
+    "build": "npm install && node -e \"const fs = require('fs'), cp = require('child_process'); if (fs.existsSync('../frontend')) { cp.execSync('npm --prefix ../frontend install && npm --prefix ../frontend run build', { stdio: 'inherit' }); }\"",
+    "prestart": "node -e \"try { require('express'); } catch (e) { require('child_process').execSync('npm install', { stdio: 'inherit' }); }\"",
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "db:migrate": "node database/migrate.js",
