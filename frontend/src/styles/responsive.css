@@ -1,0 +1,26 @@
+
+@media (max-width: 1024px) {
+  :root {
+    --container-max: 960px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --container-max: 100%;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: block !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
