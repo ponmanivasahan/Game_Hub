@@ -2,6 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const { notFoundHandler, errorHandler } = require('./middleware/errorMiddleware');
 
+const path = require('path');
+const fs = require('fs');
+
 const authRoutes = require('./routes/authRoutes');
 const gameRoutes = require('./routes/gameRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
@@ -33,6 +36,15 @@ app.use('/api/favorites', favoriteRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/chat', chatRoutes);
+
+const frontendDist = path.resolve(__dirname, '../../frontend/dist');
+if (fs.existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(frontendDist, 'index.html'));
+  });
+}
 
 app.use(notFoundHandler);
 app.use(errorHandler);
