@@ -191,6 +191,103 @@ function handleMockRequest(endpoint, options = {}) {
     };
   }
 
+  if (path === '/games/omni/search') {
+    const q = (params.get('q') || '').toLowerCase();
+    const matchedGames = MOCK_GAMES.filter(g => g.title.toLowerCase().includes(q) || g.description.toLowerCase().includes(q));
+    return {
+      success: true,
+      data: {
+        games: matchedGames.slice(0, 8),
+        threads: MOCK_THREADS.filter(t => t.title.toLowerCase().includes(q)).slice(0, 4)
+      }
+    };
+  }
+
+  if (path.startsWith('/games/') && path.endsWith('/telemetry')) {
+    const slug = path.split('/')[2];
+    const game = MOCK_GAMES.find(g => g.slug === slug || String(g.id) === slug) || MOCK_GAMES[0];
+    const rating = Number(game.average_rating || 4.8);
+    const basePlayers = Math.max(Math.round(rating * 2400), 1200);
+    return {
+      success: true,
+      data: {
+        game_id: game.id,
+        title: game.title,
+        steam_app_id: game.steam_app_id,
+        current_players: basePlayers,
+        peak_24h: Math.round(basePlayers * 1.55),
+        positive_sentiment_percent: Math.min(Math.max(Math.round((rating / 5) * 100), 75), 99),
+        activity_status: 'High In-Game Traffic',
+        telemetry_timestamp: new Date().toISOString()
+      }
+    };
+  }
+
+  if (path.startsWith('/games/') && path.endsWith('/similar')) {
+    const slug = path.split('/')[2];
+    const game = MOCK_GAMES.find(g => g.slug === slug || String(g.id) === slug) || MOCK_GAMES[0];
+    const similar = MOCK_GAMES.filter(g => g.id !== game.id).slice(0, 4);
+    return { success: true, data: similar };
+  }
+
+  if (path.startsWith('/games/') && path.endsWith('/favorite')) {
+    const gameId = parseInt(path.split('/')[2], 10);
+    let ids = [1, 2, 4];
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('indiegamer_favorites');
+      if (stored) {
+        try { ids = JSON.parse(stored); } catch (e) {}
+      }
+      const isFav = ids.includes(gameId);
+      if (isFav) {
+        ids = ids.filter(x => x !== gameId);
+      } else {
+        ids.push(gameId);
+      }
+      localStorage.setItem('indiegamer_favorites', JSON.stringify(ids));
+      return { success: true, data: { isFavorite: !isFav } };
+    }
+    return { success: true, data: { isFavorite: true } };
+  }
+
+  if (path.startsWith('/games/') && path.endsWith('/reviews')) {
+    const gameId = parseInt(path.split('/')[2], 10);
+    if (method === 'POST') {
+      const newReview = {
+        id: Date.now(),
+        game_id: gameId,
+        user_id: 3,
+        user_name: 'Alex Vance',
+        user_avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80',
+        rating: body.rating || 5,
+        review_text: body.review_text || '',
+        created_at: new Date().toISOString()
+      };
+      return { success: true, data: newReview };
+    }
+    const reviews = MOCK_REVIEWS.filter(r => isNaN(gameId) || r.game_id === gameId);
+    return { success: true, data: reviews };
+  }
+
+  if (path.startsWith('/games/') && path.endsWith('/threads')) {
+    const gameId = parseInt(path.split('/')[2], 10);
+    if (method === 'POST') {
+      const newThread = {
+        id: Date.now(),
+        game_id: gameId,
+        user_name: 'Alex Vance',
+        user_avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80',
+        title: body.title,
+        content: body.content,
+        post_count: 1,
+        created_at: new Date().toISOString()
+      };
+      return { success: true, data: newThread };
+    }
+    const threads = MOCK_THREADS.filter(t => isNaN(gameId) || t.game_id === gameId);
+    return { success: true, data: { threads, pagination: { total: threads.length, page: 1, limit: 10, totalPages: 1 } } };
+  }
+
   if (path.startsWith('/games/id/')) {
     const id = parseInt(path.replace('/games/id/', ''), 10);
     const game = MOCK_GAMES.find(g => g.id === id) || MOCK_GAMES[0];
@@ -277,7 +374,11 @@ function handleMockRequest(endpoint, options = {}) {
     return { success: true, data: MOCK_REVIEWS.filter(r => r.game_id === gameId) };
   }
 
-  if (path === '/favorites') {
+  if (path === '/reviews/recent') {
+    return { success: true, data: MOCK_REVIEWS.slice(0, 6) };
+  }
+
+  if (path === '/favorites' || path === '/favorites/my') {
     let ids = [1, 2, 4];
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('indiegamer_favorites');

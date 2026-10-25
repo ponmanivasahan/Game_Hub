@@ -197,7 +197,7 @@ export default function GameDetails() {
                 </div>
               </div>
 
-              {telemetry && (
+              {telemetry && typeof telemetry.current_players === 'number' && (
                 <div
                   style={{
                     display: 'inline-flex',
@@ -222,11 +222,11 @@ export default function GameDetails() {
                       display: 'inline-block'
                     }}
                   />
-                  <span><strong>{telemetry.current_players.toLocaleString()}</strong> playing now</span>
+                  <span><strong>{(telemetry.current_players ?? 0).toLocaleString()}</strong> playing now</span>
                   <span style={{ color: 'var(--text-muted)' }}>·</span>
-                  <span>24h Peak: <strong>{telemetry.peak_24h.toLocaleString()}</strong></span>
+                  <span>24h Peak: <strong>{(telemetry.peak_24h ?? 0).toLocaleString()}</strong></span>
                   <span style={{ color: 'var(--text-muted)' }}>·</span>
-                  <span>{telemetry.positive_sentiment_percent}% Positive</span>
+                  <span>{telemetry.positive_sentiment_percent ?? 95}% Positive</span>
                 </div>
               )}
 
